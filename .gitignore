@@ -10,6 +10,5 @@ charts/istiod/
 charts/istiod/*
 charts/istio-base-test/
 charts/istio-base-test/*
-charts/istio-istiod-test/
-charts/istio-istiod-test/
+
 
