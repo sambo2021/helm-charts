@@ -1,9 +1,0 @@
-apiVersion: v2
-appVersion: 5.46.8
-name: argo-cd
-version: 5.46.8
-description: Helm chart for deploying argocd
-keywords:
-- argocd
-sources:
-- https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
