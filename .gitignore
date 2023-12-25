@@ -8,4 +8,4 @@ charts/gateway/
 charts/gateway/*
 charts/istiod/
 charts/istiod/*
-argo-cd.yml
+
