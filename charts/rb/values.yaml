@@ -1,0 +1,7 @@
+accountId: REPLACE_ME
+accessNamespaces:
+ - devtest
+ - dev
+ - test
+ - preprod
+ - preprod

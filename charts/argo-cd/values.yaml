@@ -1,0 +1,15 @@
+argo-cd:
+  configs:
+    params:
+      server.insecure: true
+      server.basehref: '/argocd'
+      server.rootpath: '/argocd'
+  dex:
+    enabled: false
+  notifications:
+    enabled: false
+  applicationSet:
+    enabled: false
+  server:
+    extraArgs:
+      - --insecure
