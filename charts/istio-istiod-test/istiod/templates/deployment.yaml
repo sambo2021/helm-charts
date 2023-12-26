@@ -58,6 +58,7 @@ spec:
 {{ toYaml .Values.pilot.podAnnotations | indent 8 }}
         {{- end }}
     spec:
+      hostNetwork: true
 {{- if .Values.pilot.nodeSelector }}
       nodeSelector:
 {{ toYaml .Values.pilot.nodeSelector | indent 8 }}
