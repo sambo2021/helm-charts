@@ -1,22 +1,22 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: istio-base
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://github.com/sambo2021/helm-charts.git
-#     path: charts/istio-base-test/base/
-#     targetRevision: master
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: istio-system
-#   syncPolicy:
-#     automated:
-#       selfHeal: true
-#   ignoreDifferences:
-#     - group: admissionregistration.k8s.io
-#       kind: ValidatingWebhookConfiguration
-#       name: istiod-default-validator
-#       jsonPointers:
-#         - /webhooks/0/failurePolicy
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: istio-base
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/sambo2021/helm-charts.git
+    path: charts/istio-base-test/base/
+    targetRevision: master
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: istio-system
+  syncPolicy:
+    automated:
+      selfHeal: true
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: istiod-default-validator
+      jsonPointers:
+        - /webhooks/0/failurePolicy
