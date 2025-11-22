@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: argocd-virtualservice
+  namespace: istio-ingress
+spec:
+  hosts:
+    - api.devops.local
+  gateways:
+    - ingress-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /argocd
+      headers:
+        request:
+          add:
+            x-forwarded-prefix: /argocd
+      route:
+        - destination:
+            host: argo-cd-argocd-server.default.svc.cluster.local
+            port:
+              number: 80
