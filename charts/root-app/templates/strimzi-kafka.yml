@@ -15,7 +15,8 @@ spec:
         rbac:
           create: false
         createGlobalResources: false
-        watchNamespaces: {kafka}
+        watchNamespaces: 
+        - "kafka"
   destination:
     server: https://kubernetes.default.svc
     namespace: kafka
