@@ -1,0 +1,22 @@
+---
+# Source: operator/templates/operator-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: "operator"
+  namespace: default
+  labels:
+    helm.sh/chart: operator-4.3.6
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/version: "v4.3.6"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4222
+      name: https
+  selector:
+    operator: leader
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/instance: minio

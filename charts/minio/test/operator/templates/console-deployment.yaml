@@ -1,0 +1,45 @@
+---
+# Source: operator/templates/console-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "console"
+  namespace: default
+  labels:
+    helm.sh/chart: operator-4.3.6
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/instance: minio
+    app.kubernetes.io/version: "v4.3.6"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: operator
+      app.kubernetes.io/instance: minio-console
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: operator
+        app.kubernetes.io/instance: minio-console
+    spec:
+      serviceAccountName: console-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: operator
+          image: "quay.io/minio/console:v0.12.3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              name: http
+            - containerPort: 9443
+              name: https
+          args:
+            - server
+          env:
+            - name: CONSOLE_OPERATOR_MODE
+              value: "on"
+          resources:
+            {}
