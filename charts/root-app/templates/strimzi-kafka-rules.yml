@@ -8,7 +8,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/sambo2021/helm-charts.git
-    path: charts/kafka-strimzi/strimzi-kafka-rule/
+    path: charts/kafka-strimzi/kafka-strimzi-rule/
     targetRevision: master
   destination:
     server: https://kubernetes.default.svc
