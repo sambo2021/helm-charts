@@ -1,0 +1,32 @@
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaUser
+metadata:
+  name: first-kafka-cluster-user
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: first-kafka-cluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    type: simple
+    acls:
+      - resource:
+          type: topic
+          name: first-kafka-cluster-topic
+          patternType: literal
+        operations:
+          - All
+        # host: "*"
+      # - resource:
+      #     type: cluster
+      #     name: first-kafka-cluster
+      #     patternType: literal
+      #   operations:
+      #     - All
+      #   host: "*"
+      # - resource:
+      #     type: transactionalId
+      #     name: "*"
+      #   operations:
+      #     - All

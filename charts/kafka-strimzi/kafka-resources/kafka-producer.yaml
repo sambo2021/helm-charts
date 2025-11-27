@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bitnami-producer
+  name: bitnami-producer
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitnami-producer
+  template:
+    metadata:
+      labels:
+        app: bitnami-producer
+    spec:
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+        - name: bitnami-producer
+          image: apache/kafka:3.7.0
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              mkdir -p /etc/tls /etc/kafka
+              chmod 700 /etc/tls
+
+              # Import CA to truststore
+              keytool -import -trustcacerts \
+                -alias cluster-ca \
+                -file /etc/tls/ca.crt \
+                -keystore /etc/tls/truststore.jks \
+                -storepass "${KAFKA_USER_PASSWORD}" -noprompt
+
+              # Convert PKCS12 to JKS
+              keytool -importkeystore \
+                -srckeystore /etc/tls/user.p12 \
+                -srcstoretype PKCS12 \
+                -srcstorepass "${KAFKA_USER_PASSWORD}" \
+                -destkeystore /etc/tls/kafka.client.keystore.jks \
+                -deststoretype JKS \
+                -deststorepass "${KAFKA_USER_PASSWORD}" \
+                -noprompt
+
+              # Create Kafka client.properties
+              cat <<EOF >/etc/kafka/client.properties
+              security.protocol=SSL
+              ssl.truststore.location=/etc/tls/truststore.jks
+              ssl.truststore.password=${KAFKA_USER_PASSWORD}
+              ssl.keystore.location=/etc/tls/kafka.client.keystore.jks
+              ssl.keystore.password=${KAFKA_USER_PASSWORD}
+              ssl.endpoint.identification.algorithm=
+              EOF
+
+              echo "✅ Kafka SSL setup completed. client.properties ready at /etc/kafka/client.properties"
+              sleep infinity
+          volumeMounts:
+            - name: user-p12
+              mountPath: /etc/tls/user.p12
+              subPath: user.p12
+            - name: kafka-ca
+              mountPath: /etc/tls/ca.crt
+              subPath: ca.crt
+          env:
+            - name: KAFKA_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: first-kafka-cluster-user
+                  key: user.password
+      volumes:
+        - name: user-p12
+          secret:
+            secretName: first-kafka-cluster-user
+        - name: kafka-ca
+          secret:
+            secretName: first-kafka-cluster-cluster-ca-cert
