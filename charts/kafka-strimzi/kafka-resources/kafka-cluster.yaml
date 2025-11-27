@@ -51,8 +51,8 @@ spec:
   kafka:
     version: 4.1.1
     metadataVersion: 4.1-IV1
-    # authorization:
-    #   type: simple
+    authorization:
+      type: simple
     listeners:
       - name: plain
         port: 9093
