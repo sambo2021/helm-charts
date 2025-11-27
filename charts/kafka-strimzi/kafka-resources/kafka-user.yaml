@@ -17,7 +17,13 @@ spec:
           patternType: literal
         operations:
           - All
-        # host: "*"
+      - resource:
+          type: group
+          name: first-kafka-cluster-group
+          patternType: literal
+        operations:
+          - All
+
       # - resource:
       #     type: cluster
       #     name: first-kafka-cluster
