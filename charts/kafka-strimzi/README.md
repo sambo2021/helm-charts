@@ -1,0 +1,1 @@
+![kafka-example](./kafka-example.png)
