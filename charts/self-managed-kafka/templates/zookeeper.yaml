@@ -1,0 +1,204 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper
+  namespace: testing-kafka
+spec:
+  serviceName: zookeeper-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: zookeeper
+          image: zookeeper:3.9
+          ports:
+              - containerPort: 2181
+                name: client-tls
+              - containerPort: 2888
+                name: quorum-tls
+              - containerPort: 3888
+                name: election-tls
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: security
+              mountPath: /security
+            - name: tls
+              mountPath: /tls
+            - name: config
+              mountPath: /conf/zoo.cfg
+              subPath: zoo.cfg
+            - name: data
+              mountPath: /data
+      initContainers:
+        - name: cert-init
+          image: eclipse-temurin:17
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          command:
+            - /bin/sh
+            - -c
+            - |
+                ORDINAL=$(echo $POD_NAME | awk -F- '{print $NF}')
+                SERVER_ID=$((ORDINAL + 1))
+                touch /data/myid
+                echo $SERVER_ID > /data/myid
+                cat /data/myid
+                
+                echo "Creating PKCS12 keystore and truststore..."
+                # Paths
+                TLS_PATH="/tls/zk$ORDINAL"
+                
+                CERT_DIR="$TLS_PATH"
+                OUT_DIR="/security"
+                
+                mkdir -p ${OUT_DIR}
+
+                # Create PKCS12 keystore
+                openssl pkcs12 -export \
+                -in ${CERT_DIR}/tls.crt \
+                -inkey ${CERT_DIR}/tls.key \
+                -certfile ${CERT_DIR}/ca.crt \
+                -out ${OUT_DIR}/keystore.p12 \
+                -password pass:changeme
+
+                chmod 644 ${OUT_DIR}/keystore.p12
+
+                # Create PKCS12 truststore (CA only)
+                keytool -import \
+                -file ${CERT_DIR}/ca.crt \
+                -alias ca-root \
+                -keystore ${OUT_DIR}/truststore.p12 \
+                -storetype PKCS12 \
+                -storepass changeme \
+                -noprompt
+
+                chmod 644 ${OUT_DIR}/truststore.p12
+
+                echo "TLS materials created."
+          volumeMounts:
+            - name: security
+              mountPath: /security
+            - name: tls
+              mountPath: /tls
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: security
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: zookeeper-config
+        - name: tls
+          projected:
+            sources:
+              - secret:
+                  name: zookeeper-0-tls
+                  items:
+                    - key: tls.crt
+                      path: zk0/tls.crt
+                    - key: tls.key
+                      path: zk0/tls.key
+                    - key: ca.crt
+                      path: zk0/ca.crt
+              - secret:
+                  name: zookeeper-1-tls
+                  items:
+                    - key: tls.crt
+                      path: zk1/tls.crt
+                    - key: tls.key
+                      path: zk1/tls.key
+                    - key: ca.crt
+                      path: zk1/ca.crt
+              - secret:
+                  name: zookeeper-2-tls
+                  items:
+                    - key: tls.crt
+                      path: zk2/tls.crt
+                    - key: tls.key
+                      path: zk2/tls.key
+                    - key: ca.crt
+                      path: zk2/ca.crt
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 500Mi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zookeeper-config
+  namespace: testing-kafka
+data:
+  zoo.cfg: |
+    tickTime=2000
+    initLimit=10
+    syncLimit=5
+    dataDir=/data
+    quorumListenOnAllIPs=true
+    
+    ## TLS Quorum
+    sslQuorum=true
+    portUnification=false
+    serverCnxnFactory=org.apache.zookeeper.server.NettyServerCnxnFactory
+    ssl.quorum.hostnameVerification=true
+
+    ssl.quorum.keyStore.location=/security/keystore.p12
+    ssl.quorum.keyStore.password=changeme
+    ssl.quorum.trustStore.location=/security/truststore.p12
+    ssl.quorum.trustStore.password=changeme
+    
+
+    # client TLS
+    secureClientPort=2181
+    ssl.hostnameVerification=true
+
+    ssl.keyStore.location=/security/keystore.p12
+    ssl.keyStore.password=changeme
+    ssl.trustStore.location=/security/truststore.p12
+    ssl.trustStore.password=changeme
+
+    server.1=zookeeper-0.zookeeper-headless.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
+    server.2=zookeeper-1.zookeeper-headless.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
+    server.3=zookeeper-2.zookeeper-headless.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper-headless
+  namespace: testing-kafka
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: zookeeper
+  ports:
+    - name: client-tls
+      port: 2181
+    - name: quorum-tls
+      port: 2888
+    - name: election-tls
+      port: 3888

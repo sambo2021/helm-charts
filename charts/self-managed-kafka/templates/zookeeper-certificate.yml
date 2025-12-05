@@ -1,0 +1,50 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zookeeper-0-cert
+  namespace: testing-kafka  # or where your gateway is
+spec:
+  secretName: zookeeper-0-tls
+  commonName: "zookeeper-0.zookeeper.testing-kafka.svc.cluster.local"
+  dnsNames:
+    - "zookeeper-0.zookeeper"
+    - "zookeeper-0.zookeeper.testing-kafka"
+    - "zookeeper-0.zookeeper.testing-kafka.svc"
+    - "zookeeper-0.zookeeper.testing-kafka.svc.cluster.local"
+  issuerRef:
+    name: sambo-cert-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zookeeper-1-cert
+  namespace: testing-kafka  # or where your gateway is
+spec:
+  secretName: zookeeper-1-tls
+  commonName: "zookeeper-1.zookeeper.testing-kafka.svc.cluster.local"
+  dnsNames:
+    - "zookeeper-1.zookeeper"
+    - "zookeeper-1.zookeeper.testing-kafka"
+    - "zookeeper-1.zookeeper.testing-kafka.svc"
+    - "zookeeper-1.zookeeper.testing-kafka.svc.cluster.local"
+  issuerRef:  
+    name: sambo-cert-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zookeeper-2-cert
+  namespace: testing-kafka  # or where your gateway is
+spec:
+  secretName: zookeeper-2-tls
+  commonName: "zookeeper-2.zookeeper.testing-kafka.svc.cluster.local"
+  dnsNames:
+    - "zookeeper-2.zookeeper"
+    - "zookeeper-2.zookeeper.testing-kafka"
+    - "zookeeper-2.zookeeper.testing-kafka.svc"
+    - "zookeeper-2.zookeeper.testing-kafka.svc.cluster.local"
+  issuerRef:
+    name: sambo-cert-issuer
+    kind: Issuer

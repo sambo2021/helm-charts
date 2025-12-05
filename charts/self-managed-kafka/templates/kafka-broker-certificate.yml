@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kafka-broker-certificate
+  namespace: testing-akafa  # or where your gateway is
+spec:
+  secretName: kafka-broker-certificate
+  commonName: 
+  dnsNames:
+    - 
+  issuerRef:
+    name: sambo-cert-issuer
+    kind: Issuer
