@@ -1,13 +1,53 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: kafka-broker-certificate
-  namespace: testing-akafa  # or where your gateway is
+  name: broker-0-cert
+  namespace: testing-kafka  # or where your gateway is
 spec:
-  secretName: kafka-broker-certificate
-  commonName: 
+  secretName: broker-0-tls
+  commonName: "broker-0.broker.testing-kafka.svc.cluster.local"
   dnsNames:
-    - 
+    - "broker-0"
+    - "broker-0.broker"
+    - "broker-0.broker.testing-kafka"
+    - "broker-0.broker.testing-kafka.svc"
+    - "broker-0.broker.testing-kafka.svc.cluster.local"
+  issuerRef:
+    name: sambo-cert-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: broker-1-cert
+  namespace: testing-kafka  # or where your gateway is
+spec:
+  secretName: broker-1-tls
+  commonName: "broker-1.broker.testing-kafka.svc.cluster.local"
+  dnsNames:
+    - "broker-1"
+    - "broker-1.broker"
+    - "broker-1.broker.testing-kafka"
+    - "broker-1.broker.testing-kafka.svc"
+    - "broker-1.broker.testing-kafka.svc.cluster.local"
+  issuerRef:  
+    name: sambo-cert-issuer
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: broker-2-cert
+  namespace: testing-kafka  # or where your gateway is
+spec:
+  secretName: broker-2-tls
+  commonName: "broker-2.broker.testing-kafka.svc.cluster.local"
+  dnsNames:
+    - "broker-2"
+    - "broker-2.broker"
+    - "broker-2.broker.testing-kafka"
+    - "broker-2.broker.testing-kafka.svc"
+    - "broker-2.broker.testing-kafka.svc.cluster.local"
   issuerRef:
     name: sambo-cert-issuer
     kind: Issuer
