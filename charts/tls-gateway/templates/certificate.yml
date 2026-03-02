@@ -7,7 +7,7 @@ spec:
   secretName: api-devops-local
   commonName: api.devops.local
   dnsNames:
-    - "*.lab.msambo.link"
+    - "*.msambo.link"
   issuerRef:
     name: selfsigned-issuer
     kind: ClusterIssuer
