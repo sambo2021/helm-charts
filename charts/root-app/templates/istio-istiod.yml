@@ -8,6 +8,31 @@ spec:
     repoURL: https://github.com/sambo2021/helm-charts.git
     path: charts/istio-istiod-test/istiod/
     targetRevision: master
+    helm:
+      values: |
+        meshConfig:
+          # Register OTel Collector as a Zipkin-compatible trace provider
+          extensionProviders:
+            - name: otel-collector
+              zipkin:
+                service: otel-collector.observability.svc.cluster.local
+                port: 9411
+
+          # Set the default tracing provider for the entire mesh
+          # (can be overridden per namespace via Telemetry CRD)
+          defaultProviders:
+            tracing:
+              - otel-collector
+
+          # Envoy access logs → stdout in JSON format
+          # Picked up by OTel Collector's filelog receiver → sent to Loki
+          accessLogFile: /dev/stdout
+          accessLogEncoding: JSON
+
+          # Proxy-level tracing config
+          defaultConfig:
+            tracing:
+              sampling: 100.0                  # 100% sampling for demo (use 1.0 for prod)
   destination:
     server: https://kubernetes.default.svc
     namespace: istio-system

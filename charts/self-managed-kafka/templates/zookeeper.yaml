@@ -20,8 +20,10 @@ spec:
         - name: zookeeper
           image: zookeeper:3.9
           ports:
-              - containerPort: 2181
+              - containerPort: 12181
                 name: client-tls
+              - containerPort: 2181
+                name: client
               - containerPort: 2888
                 name: quorum-tls
               - containerPort: 3888
@@ -93,6 +95,35 @@ spec:
                 -noprompt
 
                 chmod 644 ${OUT_DIR}/truststore.p12
+                
+                openssl pkcs12 -in /security/keystore.p12 -nocerts -nodes -out /security/client.key -password pass:changeme
+                openssl pkcs12 -in /security/keystore.p12 -clcerts -nokeys -out /security/client.crt -password pass:changeme
+                openssl pkcs12 -in /security/truststore.p12 -cacerts -nokeys -out /security/ca.pem -password pass:changeme
+                chmod 644 ${OUT_DIR}/client.key
+                chmod 644 ${OUT_DIR}/client.crt
+                chmod 644 ${OUT_DIR}/ca.pem
+
+                keytool -importkeystore \
+                -srckeystore /security/keystore.p12 -srcstoretype PKCS12 -srcstorepass changeme \
+                -destkeystore /security/keystore.jks -deststoretype JKS -deststorepass changeme
+
+                keytool -importkeystore \
+                -srckeystore /security/truststore.p12 -srcstoretype PKCS12 -srcstorepass changeme \
+                -destkeystore /security/truststore.jks -deststoretype JKS -deststorepass changeme
+
+                cat << EOF > ${OUT_DIR}/client.config
+                zookeeper.client.secure=true
+                zookeeper.ssl.client.enable=true
+                zookeeper.ssl.client.keystore.location=/security/keystore.jks
+                zookeeper.ssl.client.keystore.password=changeme
+                zookeeper.ssl.client.truststore.location=/security/truststore.jks
+                zookeeper.ssl.client.truststore.password=changeme
+                zookeeper.ssl.protocol=TLSv1.3
+                zookeeper.ssl.ciphersuites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+                zookeeper.ssl.clientHostnameVerification=false
+                EOF
+                
+                chmod 644 ${OUT_DIR}/client.config
 
                 echo "TLS materials created."
           volumeMounts:
@@ -155,10 +186,11 @@ metadata:
 data:
   zoo.cfg: |
     tickTime=2000
-    initLimit=10
-    syncLimit=5
+    initLimit=20
+    syncLimit=10
     dataDir=/data
     quorumListenOnAllIPs=true
+    maxClientCnxns=200
     
     ## TLS Quorum
     sslQuorum=true
@@ -173,7 +205,8 @@ data:
     
 
     # client TLS
-    secureClientPort=2181
+    clientPort=2181
+    secureClientPort=12181
     ssl.hostnameVerification=true
 
     ssl.keyStore.location=/security/keystore.p12
@@ -181,9 +214,9 @@ data:
     ssl.trustStore.location=/security/truststore.p12
     ssl.trustStore.password=changeme
 
-    server.1=zookeeper-0.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
-    server.2=zookeeper-1.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
-    server.3=zookeeper-2.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant;127.0.0.1:12181
+    server.1=zookeeper-0.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant
+    server.2=zookeeper-1.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant
+    server.3=zookeeper-2.zookeeper.testing-kafka.svc.cluster.local:2888:3888:participant
 ---
 apiVersion: v1
 kind: Service
@@ -197,6 +230,8 @@ spec:
     app: zookeeper
   ports:
     - name: client-tls
+      port: 12181
+    - name: client
       port: 2181
     - name: quorum-tls
       port: 2888
