@@ -5,7 +5,7 @@ metadata:
   namespace: istio-ingress
 spec:
   hosts:
-    - api.devops.local
+    - "argocd.lab.msambo.link"
   gateways:
     - ingress-gateway
   http:
