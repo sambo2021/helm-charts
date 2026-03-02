@@ -13,13 +13,13 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - "api.devops.local"
+    - "*.lab.msambo.link"
   - port:
       number: 443
       name: https
       protocol: HTTPS
     hosts:
-    - "api.devops.local"
+    - "*.lab.msambo.link"
     tls:
       mode: SIMPLE
       credentialName: api-devops-local  # the secret created by cert-manager
